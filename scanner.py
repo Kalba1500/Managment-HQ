@@ -67,9 +67,7 @@ def update_or_create(barcode):
         current_points = float(current_points) if current_points else 0
         df.loc[df["BarcodeID"] == barcode, "Store Credit"] = current_points + points
 
-    # =========================
     # NEW CUSTOMER
-    # =========================
     else:
         print("New customer. Creating record...")
 
@@ -81,7 +79,7 @@ def update_or_create(barcode):
         if tier not in ["Gold", "Silver", "Bronze"]:
             print("Invalid tier. Defaulting to Bronze.")
             tier = "Bronze"
-
+# CHANGE THE MULTIPLIER
         multiplier = tier_multiplier[tier]
         points = int((amount / 10) * multiplier)
 

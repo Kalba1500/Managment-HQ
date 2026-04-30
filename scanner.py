@@ -26,53 +26,79 @@ tier_multiplier = {
     "Bronze": 1
 }
 
+# =========================
+# SESSION STATE
+# =========================
+if "new_customer" not in st.session_state:
+    st.session_state.new_customer = False
+
+# =========================
+# UI
+# =========================
 st.title("Customer POS System")
 
 barcode = st.text_input("Scan / Enter Barcode")
-
 amount = st.number_input("Amount Spent ($)", min_value=0.0)
 
+# =========================
+# SUBMIT BUTTON
+# =========================
 if st.button("Submit"):
     df = load_data()
 
-    match = df[df["BarcodeID"] == barcode]
-
-    if not match.empty:
-        tier = match["Tier"].values[0]
-        multiplier = tier_multiplier.get(tier, 1)
-        points = int((amount / 10) * multiplier)
-
-        st.success(f"Existing customer ({tier}) → Points earned: {points}")
-
-        df.loc[df["BarcodeID"] == barcode, "Store Credit"] += points
-        df.loc[df["BarcodeID"] == barcode, "Amount Bought"] += amount
-        df.loc[df["BarcodeID"] == barcode, "Last Visit"] = datetime.now()
-
+    if not barcode:
+        st.error("Enter a barcode")
     else:
-        st.warning("New Customer")
+        match = df[df["BarcodeID"] == barcode]
 
-        first_name = st.text_input("First Name")
-        last_name = st.text_input("Last Name")
-        tier = st.selectbox("Tier", ["Gold", "Silver", "Bronze"])
-
-        if st.button("Create Customer"):
-            multiplier = tier_multiplier[tier]
+        if not match.empty:
+            tier = match["Tier"].values[0]
+            multiplier = tier_multiplier.get(tier, 1)
             points = int((amount / 10) * multiplier)
 
-            new_row = {
-                "BarcodeID": barcode,
-                "First Name": first_name,
-                "Last Name": last_name,
-                "Tier": tier,
-                "Date Created": datetime.now(),
-                "Store Credit": points,
-                "Amount Bought": amount,
-                "Last Visit": datetime.now()
-            }
+            st.success(f"Welcome back {match['First Name'].values[0]} ({tier})")
+            st.info(f"Points earned: {points}")
 
-            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+            df.loc[df["BarcodeID"] == barcode, "Store Credit"] += points
+            df.loc[df["BarcodeID"] == barcode, "Amount Bought"] += amount
+            df.loc[df["BarcodeID"] == barcode, "Last Visit"] = datetime.now()
+
             save_data(df)
 
-            st.success(f"Customer created! Points: {points}")
+        else:
+            st.session_state.new_customer = True
 
-    save_data(df)
+# =========================
+# NEW CUSTOMER FORM
+# =========================
+if st.session_state.new_customer:
+    st.warning("New Customer")
+
+    first_name = st.text_input("First Name")
+    last_name = st.text_input("Last Name")
+    tier = st.selectbox("Tier", ["Gold", "Silver", "Bronze"])
+
+    if st.button("Create Customer"):
+        df = load_data()
+
+        multiplier = tier_multiplier[tier]
+        points = int((amount / 10) * multiplier)
+
+        new_row = {
+            "BarcodeID": barcode,
+            "First Name": first_name,
+            "Last Name": last_name,
+            "Tier": tier,
+            "Date Created": datetime.now(),
+            "Store Credit": points,
+            "Amount Bought": amount,
+            "Last Visit": datetime.now()
+        }
+
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
+        save_data(df)
+
+        st.success(f"Customer created! Points: {points}")
+
+        # Reset state
+        st.session_state.new_customer = False

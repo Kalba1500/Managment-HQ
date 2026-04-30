@@ -127,6 +127,7 @@ if st.button("Submit"):
     customer = get_customer(barcode)
 
     if customer:
+
         tier = customer[3]
         multiplier = tier_multiplier.get(tier, 1)
         points = int((amount / 10) * multiplier)
@@ -138,6 +139,7 @@ if st.button("Submit"):
 
     else:
         st.session_state.new_customer = True
+        st.session_state.barcode = barcode
 
 # =========================
 # STEP 2: NEW CUSTOMER FORM

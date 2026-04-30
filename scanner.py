@@ -88,6 +88,20 @@ def update_customer(barcode, amount, points):
 init_db()
 
 # =========================
+# VIEW ALL CUSTOMERS
+# =========================
+st.subheader("All Customers")
+
+def load_all_customers():
+    conn = sqlite3.connect(DB_FILE)
+    df = pd.read_sql_query("SELECT * FROM customers", conn)
+    conn.close()
+    return df
+
+if st.button("Show Customers"):
+    df = load_all_customers()
+    st.dataframe(df)
+# =========================
 # UI
 # =========================
 st.title("Customer POS System (SQLite)")

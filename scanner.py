@@ -113,15 +113,53 @@ tier_multiplier = {
     "Bronze": 1
 }
 
+if "new_customer" not in st.session_state:
+    st.session_state.new_customer = False
+
 barcode = st.text_input("Scan / Enter Barcode")
 amount = st.number_input("Amount Spent ($)", min_value=0.0)
 
+# =========================
+# STEP 1: SUBMIT BARCODE
+# =========================
 if st.button("Submit"):
 
-    if not barcode:
-        st.error("Please enter a barcode")
+    customer = get_customer(barcode)
+
+    if customer:
+        tier = customer[3]
+        multiplier = tier_multiplier.get(tier, 1)
+        points = int((amount / 10) * multiplier)
+
+        update_customer(barcode, amount, points)
+
+        st.success(f"Welcome back {customer[1]} {customer[2]} ({tier})")
+        st.info(f"Points earned: {points}")
+
     else:
-        customer = get_customer(barcode)
+        st.session_state.new_customer = True
+
+# =========================
+# STEP 2: NEW CUSTOMER FORM
+# =========================
+if st.session_state.new_customer:
+
+    st.warning("New Customer")
+
+    first = st.text_input("First Name")
+    last = st.text_input("Last Name")
+    tier = st.selectbox("Tier", ["Gold", "Silver", "Bronze"])
+
+    if st.button("Create Customer"):
+
+        multiplier = tier_multiplier[tier]
+        points = int((amount / 10) * multiplier)
+
+        create_customer(barcode, first, last, tier, amount, points)
+
+        st.success(f"Customer created! Points: {points}")
+
+        st.session_state.new_customer = False
 
         # =========================
         # EXISTING CUSTOMER

@@ -1,111 +1,60 @@
 # ID SCANNER
 import streamlit as st
-import sqlite3
 import pandas as pd
 from datetime import datetime
-
-DB_FILE = "customers.db"
-
-# =========================
-# DATABASE SETUP
-# =========================
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS customers (
-        BarcodeID TEXT PRIMARY KEY,
-        FirstName TEXT,
-        LastName TEXT,
-        Tier TEXT,
-        DateCreated TEXT,
-        StoreCredit REAL,
-        AmountBought REAL,
-        LastVisit TEXT
-    )
-    """)
-
-    conn.commit()
-    conn.close()
+from supabase import create_client
 
 # =========================
-# FETCH CUSTOMER
+# SUPABASE SETUP
+# =========================
+SUPABASE_URL = "https://rwuepcusnevuaxhdmrgt.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dWVwY3VzbmV2dWF4aGRtcmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MDM3NjIsImV4cCI6MjA5MzA3OTc2Mn0.Ci7hxwCYJxT8ec7LqseVRHxaYdB4DfBi35OaojTeWSk"
+
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# =========================
+# DATABASE FUNCTIONS
 # =========================
 def get_customer(barcode):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    res = supabase.table("customers") \
+        .select("*") \
+        .eq("BarcodeID", barcode) \
+        .execute()
 
-    c.execute("SELECT * FROM customers WHERE BarcodeID = ?", (barcode,))
-    data = c.fetchone()
+    return res.data[0] if res.data else None
 
-    conn.close()
-    return data
 
-# =========================
-# CREATE CUSTOMER
-# =========================
 def create_customer(barcode, first, last, tier, amount, points):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    supabase.table("customers").insert({
+        "BarcodeID": barcode,
+        "FirstName": first,
+        "LastName": last,
+        "Tier": tier,
+        "DateCreated": datetime.now().isoformat(),
+        "StoreCredit": points,
+        "AmountBought": amount,
+        "LastVisit": datetime.now().isoformat()
+    }).execute()
 
-    c.execute("""
-    INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        barcode,
-        first,
-        last,
-        tier,
-        datetime.now(),
-        points,
-        amount,
-        datetime.now()
-    ))
 
-    conn.commit()
-    conn.close()
-
-# =========================
-# UPDATE CUSTOMER
-# =========================
 def update_customer(barcode, amount, points):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    customer = get_customer(barcode)
 
-    c.execute("""
-    UPDATE customers
-    SET StoreCredit = StoreCredit + ?,
-        AmountBought = AmountBought + ?,
-        LastVisit = ?
-    WHERE BarcodeID = ?
-    """, (points, amount, datetime.now(), barcode))
+    supabase.table("customers").update({
+        "StoreCredit": customer["StoreCredit"] + points,
+        "AmountBought": customer["AmountBought"] + amount,
+        "LastVisit": datetime.now().isoformat()
+    }).eq("BarcodeID", barcode).execute()
 
-    conn.commit()
-    conn.close()
-
-# =========================
-# INIT DB
-# =========================
-init_db()
-
-# =========================
-# VIEW CUSTOMERS
-# =========================
-st.subheader("All Customers")
 
 def load_all_customers():
-    conn = sqlite3.connect(DB_FILE)
-    df = pd.read_sql_query("SELECT * FROM customers", conn)
-    conn.close()
-    return df
-
-if st.button("Show Customers"):
-    st.dataframe(load_all_customers())
+    res = supabase.table("customers").select("*").execute()
+    return pd.DataFrame(res.data)
 
 # =========================
-# UI
+# UI SETUP
 # =========================
-st.title("Customer POS System (SQLite)")
+st.title("Customer POS System (Supabase)")
 
 tier_multiplier = {
     "Gold": 3,
@@ -118,24 +67,37 @@ if "new_customer" not in st.session_state:
 if "barcode" not in st.session_state:
     st.session_state.barcode = ""
 
+# =========================
+# VIEW CUSTOMERS
+# =========================
+st.subheader("All Customers")
+
+if st.button("Show Customers"):
+    df = load_all_customers()
+    st.dataframe(df)
+
+# =========================
+# INPUTS
+# =========================
 barcode = st.text_input("Scan / Enter Barcode")
 amount = st.number_input("Amount Spent ($)", min_value=0.0)
 
 # =========================
-# SUBMIT
+# SUBMIT FLOW
 # =========================
 if st.button("Submit"):
 
     customer = get_customer(barcode)
 
     if customer:
-        tier = customer[3]
+        tier = customer["Tier"]
         multiplier = tier_multiplier.get(tier, 1)
+
         points = int((amount / 10) * multiplier)
 
         update_customer(barcode, amount, points)
 
-        st.success(f"Welcome back {customer[1]} {customer[2]} ({tier})")
+        st.success(f"Welcome back {customer['FirstName']} {customer['LastName']} ({tier})")
         st.info(f"Points earned: {points}")
 
     else:
@@ -156,7 +118,6 @@ if st.session_state.new_customer:
     if st.button("Create Customer"):
 
         barcode = st.session_state.barcode
-
         multiplier = tier_multiplier[tier]
         points = int((amount / 10) * multiplier)
 

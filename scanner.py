@@ -89,7 +89,7 @@ def update_customer(barcode, amount, points):
 init_db()
 
 # =========================
-# VIEW ALL CUSTOMERS
+# VIEW CUSTOMERS
 # =========================
 st.subheader("All Customers")
 
@@ -100,8 +100,8 @@ def load_all_customers():
     return df
 
 if st.button("Show Customers"):
-    df = load_all_customers()
-    st.dataframe(df)
+    st.dataframe(load_all_customers())
+
 # =========================
 # UI
 # =========================
@@ -115,19 +115,20 @@ tier_multiplier = {
 
 if "new_customer" not in st.session_state:
     st.session_state.new_customer = False
+if "barcode" not in st.session_state:
+    st.session_state.barcode = ""
 
 barcode = st.text_input("Scan / Enter Barcode")
 amount = st.number_input("Amount Spent ($)", min_value=0.0)
 
 # =========================
-# STEP 1: SUBMIT BARCODE
+# SUBMIT
 # =========================
 if st.button("Submit"):
 
     customer = get_customer(barcode)
 
     if customer:
-
         tier = customer[3]
         multiplier = tier_multiplier.get(tier, 1)
         points = int((amount / 10) * multiplier)
@@ -142,7 +143,7 @@ if st.button("Submit"):
         st.session_state.barcode = barcode
 
 # =========================
-# STEP 2: NEW CUSTOMER FORM
+# NEW CUSTOMER FORM
 # =========================
 if st.session_state.new_customer:
 
@@ -164,20 +165,3 @@ if st.session_state.new_customer:
         st.success(f"Customer created! Points: {points}")
 
         st.session_state.new_customer = False
-
-        # =========================
-        # EXISTING CUSTOMER
-        # =========================
-        if customer:
-            tier = customer[3]
-            multiplier = tier_multiplier.get(tier, 1)
-
-            points = int((amount / 10) * multiplier)
-
-            update_customer(barcode, amount, points)
-
-            st.success(f"Welcome back {customer[1]} {customer[2]} ({tier})")
-            st.info(f"Points earned: {points}")
-
-        # =========================
-        # N

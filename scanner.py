@@ -152,6 +152,8 @@ if st.session_state.new_customer:
 
     if st.button("Create Customer"):
 
+        barcode = st.session_state.barcode
+
         multiplier = tier_multiplier[tier]
         points = int((amount / 10) * multiplier)
 

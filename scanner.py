@@ -1,24 +1,96 @@
 # ID SCANNER
 import streamlit as st
-import pandas as pd
+import sqlite3
 from datetime import datetime
-import os
 
-FILE = "customers.xlsx"
+DB_FILE = "customers.db"
 
-def load_data():
-    if os.path.exists(FILE):
-        df = pd.read_excel(FILE)
-        df["BarcodeID"] = df["BarcodeID"].astype(str)
-        return df
-    else:
-        return pd.DataFrame(columns=[
-            "BarcodeID", "First Name", "Last Name", "Tier",
-            "Date Created", "Store Credit", "Amount Bought", "Last Visit"
-        ])
+# =========================
+# DATABASE SETUP
+# =========================
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
 
-def save_data(df):
-    df.to_excel(FILE, index=False)
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS customers (
+        BarcodeID TEXT PRIMARY KEY,
+        FirstName TEXT,
+        LastName TEXT,
+        Tier TEXT,
+        DateCreated TEXT,
+        StoreCredit REAL,
+        AmountBought REAL,
+        LastVisit TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+# =========================
+# FETCH CUSTOMER
+# =========================
+def get_customer(barcode):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM customers WHERE BarcodeID = ?", (barcode,))
+    data = c.fetchone()
+
+    conn.close()
+    return data
+
+# =========================
+# CREATE CUSTOMER
+# =========================
+def create_customer(barcode, first, last, tier, amount, points):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+
+    c.execute("""
+    INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        barcode,
+        first,
+        last,
+        tier,
+        datetime.now(),
+        points,
+        amount,
+        datetime.now()
+    ))
+
+    conn.commit()
+    conn.close()
+
+# =========================
+# UPDATE CUSTOMER
+# =========================
+def update_customer(barcode, amount, points):
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+
+    c.execute("""
+    UPDATE customers
+    SET StoreCredit = StoreCredit + ?,
+        AmountBought = AmountBought + ?,
+        LastVisit = ?
+    WHERE BarcodeID = ?
+    """, (points, amount, datetime.now(), barcode))
+
+    conn.commit()
+    conn.close()
+
+# =========================
+# INIT DB
+# =========================
+init_db()
+
+# =========================
+# UI
+# =========================
+st.title("Customer POS System (SQLite)")
 
 tier_multiplier = {
     "Gold": 3,
@@ -26,79 +98,29 @@ tier_multiplier = {
     "Bronze": 1
 }
 
-# =========================
-# SESSION STATE
-# =========================
-if "new_customer" not in st.session_state:
-    st.session_state.new_customer = False
-
-# =========================
-# UI
-# =========================
-st.title("Customer POS System")
-
 barcode = st.text_input("Scan / Enter Barcode")
 amount = st.number_input("Amount Spent ($)", min_value=0.0)
 
-# =========================
-# SUBMIT BUTTON
-# =========================
 if st.button("Submit"):
-    df = load_data()
 
     if not barcode:
-        st.error("Enter a barcode")
+        st.error("Please enter a barcode")
     else:
-        match = df[df["BarcodeID"] == barcode]
+        customer = get_customer(barcode)
 
-        if not match.empty:
-            tier = match["Tier"].values[0]
+        # =========================
+        # EXISTING CUSTOMER
+        # =========================
+        if customer:
+            tier = customer[3]
             multiplier = tier_multiplier.get(tier, 1)
+
             points = int((amount / 10) * multiplier)
 
-            st.success(f"Welcome back {match['First Name'].values[0]} ({tier})")
+            update_customer(barcode, amount, points)
+
+            st.success(f"Welcome back {customer[1]} {customer[2]} ({tier})")
             st.info(f"Points earned: {points}")
 
-            df.loc[df["BarcodeID"] == barcode, "Store Credit"] += points
-            df.loc[df["BarcodeID"] == barcode, "Amount Bought"] += amount
-            df.loc[df["BarcodeID"] == barcode, "Last Visit"] = datetime.now()
-
-            save_data(df)
-
-        else:
-            st.session_state.new_customer = True
-
-# =========================
-# NEW CUSTOMER FORM
-# =========================
-if st.session_state.new_customer:
-    st.warning("New Customer")
-
-    first_name = st.text_input("First Name")
-    last_name = st.text_input("Last Name")
-    tier = st.selectbox("Tier", ["Gold", "Silver", "Bronze"])
-
-    if st.button("Create Customer"):
-        df = load_data()
-
-        multiplier = tier_multiplier[tier]
-        points = int((amount / 10) * multiplier)
-
-        new_row = {
-            "BarcodeID": barcode,
-            "First Name": first_name,
-            "Last Name": last_name,
-            "Tier": tier,
-            "Date Created": datetime.now(),
-            "Store Credit": points,
-            "Amount Bought": amount,
-            "Last Visit": datetime.now()
-        }
-
-        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
-        save_data(df)
-
-        st.success(f"Customer created! Points: {points}")
-
-        # Reset state
-        st.session_state.new_customer = False
+        # =========================
+        # N

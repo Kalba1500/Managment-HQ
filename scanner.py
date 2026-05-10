@@ -95,26 +95,37 @@ if st.button("Submit"):
     customer = get_customer(barcode)
 
     if customer:
-        from datetime import datetime
 
-if customer:
-    expiry = customer.get("MembershipExpires")
+        from datetime import datetime, timedelta
 
-    if expiry:
-        expiry_date = datetime.fromisoformat(expiry)
+        # =========================
+        # MEMBERSHIP CHECK
+        # =========================
+        expiry = customer.get("MembershipExpires")
 
-        if datetime.now() > expiry_date:
-            st.error("Membership expired!")
+        if expiry:
+            expiry_date = datetime.fromisoformat(expiry)
 
-            if st.button("Renew Membership (30 days)"):
-                new_expiry = datetime.now() + timedelta(days=30)
+            if datetime.now() > expiry_date:
+                st.error("Membership expired!")
 
-                supabase.table("customers").update({
-                    "MembershipExpires": new_expiry.isoformat()
-                }).eq("BarcodeID", barcode).execute()
+                # renewal action
+                if st.button("Renew Membership (30 days)"):
 
-                st.success("Membership renewed!")
-                st.stop()
+                    new_expiry = datetime.now() + timedelta(days=30)
+
+                    supabase.table("customers").update({
+                        "MembershipExpires": new_expiry.isoformat()
+                    }).eq("BarcodeID", barcode).execute()
+
+                    st.success("Membership renewed!")
+                    st.stop()
+
+                st.stop()  # stop further processing if expired
+
+        # =========================
+        # NORMAL PURCHASE FLOW
+        # =========================
         tier = customer["Tier"]
         multiplier = tier_multiplier.get(tier, 1)
 
@@ -128,7 +139,6 @@ if customer:
     else:
         st.session_state.new_customer = True
         st.session_state.barcode = barcode
-
 # =========================
 # NEW CUSTOMER FORM
 # =========================

@@ -95,6 +95,26 @@ if st.button("Submit"):
     customer = get_customer(barcode)
 
     if customer:
+        from datetime import datetime
+
+if customer:
+    expiry = customer.get("MembershipExpires")
+
+    if expiry:
+        expiry_date = datetime.fromisoformat(expiry)
+
+        if datetime.now() > expiry_date:
+            st.error("Membership expired!")
+
+            if st.button("Renew Membership (30 days)"):
+                new_expiry = datetime.now() + timedelta(days=30)
+
+                supabase.table("customers").update({
+                    "MembershipExpires": new_expiry.isoformat()
+                }).eq("BarcodeID", barcode).execute()
+
+                st.success("Membership renewed!")
+                st.stop()
         tier = customer["Tier"]
         multiplier = tier_multiplier.get(tier, 1)
 

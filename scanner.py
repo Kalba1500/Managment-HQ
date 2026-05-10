@@ -115,14 +115,28 @@ if st.session_state.new_customer:
     last = st.text_input("Last Name")
     tier = st.selectbox("Tier", ["Gold", "Silver", "Bronze"])
 
+    mode = st.radio(
+        "Select Action",
+        ["Signup Only (No Purchase)", "Signup + Purchase"]
+    )
+
     if st.button("Create Customer"):
 
         barcode = st.session_state.barcode
         multiplier = tier_multiplier[tier]
-        points = int((amount / 10) * multiplier)
 
-        create_customer(barcode, first, last, tier, amount, points)
+        if mode == "Signup Only (No Purchase)":
+            amount_value = 0
+            points = 0
+        else:
+            amount_value = amount
+            points = int((amount / 10) * multiplier)
 
-        st.success(f"Customer created! Points: {points}")
+        create_customer(barcode, first, last, tier, amount_value, points)
+
+        if mode == "Signup Only (No Purchase)":
+            st.success("Customer created successfully (no purchase).")
+        else:
+            st.success(f"Customer created! Points: {points}")
 
         st.session_state.new_customer = False

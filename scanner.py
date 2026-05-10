@@ -24,7 +24,11 @@ def get_customer(barcode):
     return res.data[0] if res.data else None
 
 
+from datetime import datetime, timedelta
+
 def create_customer(barcode, first, last, tier, amount, points):
+    expiry = datetime.now() + timedelta(days=30)
+
     supabase.table("customers").insert({
         "BarcodeID": barcode,
         "FirstName": first,
@@ -33,7 +37,8 @@ def create_customer(barcode, first, last, tier, amount, points):
         "DateCreated": datetime.now().isoformat(),
         "StoreCredit": points,
         "AmountBought": amount,
-        "LastVisit": datetime.now().isoformat()
+        "LastVisit": datetime.now().isoformat(),
+        "MembershipExpires": expiry.isoformat()
     }).execute()
 
 

@@ -1,7 +1,7 @@
 # ID SCANNER
 import streamlit as st
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from supabase import create_client
 
 # =========================
@@ -13,6 +13,15 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # =========================
+# TIER CONFIG (NEW SYSTEM)
+# =========================
+TIER_CONFIG = {
+    "Bronze": {"dpp": 0.00, "discount": 10, "price": 30},
+    "Gold": {"dpp": 0.10, "discount": 15, "price": 100},
+    "Executive": {"dpp": 0.15, "discount": 20, "price": 150},
+}
+
+# =========================
 # DATABASE FUNCTIONS
 # =========================
 def get_customer(barcode):
@@ -20,11 +29,8 @@ def get_customer(barcode):
         .select("*") \
         .eq("BarcodeID", barcode) \
         .execute()
-
     return res.data[0] if res.data else None
 
-
-from datetime import datetime, timedelta
 
 def create_customer(barcode, first, last, tier, amount, points):
     expiry = datetime.now() + timedelta(days=30)
@@ -46,8 +52,8 @@ def update_customer(barcode, amount, points):
     customer = get_customer(barcode)
 
     supabase.table("customers").update({
-        "StoreCredit": customer["StoreCredit"] + points,
-        "AmountBought": customer["AmountBought"] + amount,
+        "StoreCredit": float(customer["StoreCredit"]) + points,
+        "AmountBought": float(customer["AmountBought"]) + amount,
         "LastVisit": datetime.now().isoformat()
     }).eq("BarcodeID", barcode).execute()
 
@@ -61,12 +67,6 @@ def load_all_customers():
 # =========================
 st.title("Customer POS System (Supabase)")
 
-tier_multiplier = {
-    "Gold": 3,
-    "Silver": 2,
-    "Bronze": 1
-}
-
 if "new_customer" not in st.session_state:
     st.session_state.new_customer = False
 if "barcode" not in st.session_state:
@@ -78,8 +78,7 @@ if "barcode" not in st.session_state:
 st.subheader("All Customers")
 
 if st.button("Show Customers"):
-    df = load_all_customers()
-    st.dataframe(df)
+    st.dataframe(load_all_customers())
 
 # =========================
 # INPUTS
@@ -96,22 +95,19 @@ if st.button("Submit"):
 
     if customer:
 
-        from datetime import datetime, timedelta
-
         # =========================
-        # MEMBERSHIP CHECK
+        # MEMBERSHIP STATUS
         # =========================
         expiry = customer.get("MembershipExpires")
 
         if expiry:
             expiry_date = datetime.fromisoformat(expiry)
+            days_left = (expiry_date - datetime.now()).days
 
-            if datetime.now() > expiry_date:
-                st.error("Membership expired!")
+            if days_left < 0:
+                st.error("⚠️ Membership EXPIRED")
 
-                # renewal action
                 if st.button("Renew Membership (30 days)"):
-
                     new_expiry = datetime.now() + timedelta(days=30)
 
                     supabase.table("customers").update({
@@ -121,24 +117,36 @@ if st.button("Submit"):
                     st.success("Membership renewed!")
                     st.stop()
 
-                st.stop()  # stop further processing if expired
+                st.stop()
 
         # =========================
-        # NORMAL PURCHASE FLOW
+        # NORMAL PURCHASE
         # =========================
         tier = customer["Tier"]
-        multiplier = tier_multiplier.get(tier, 1)
+        config = TIER_CONFIG[tier]
 
-        points = int((amount / 10) * multiplier)
+        points = amount * config["dpp"]
+        discount = config["discount"]
 
         update_customer(barcode, amount, points)
 
+        # =========================
+        # DISPLAY INFO
+        # =========================
         st.success(f"Welcome back {customer['FirstName']} {customer['LastName']} ({tier})")
-        st.info(f"Points earned: {points}")
+
+        if days_left >= 0:
+            st.info(f"Membership expires in {days_left} days")
+        else:
+            st.error("Membership EXPIRED")
+
+        st.info(f"Points earned: {points:.2f}")
+        st.info(f"Discount applied: {discount}%")
 
     else:
         st.session_state.new_customer = True
         st.session_state.barcode = barcode
+
 # =========================
 # NEW CUSTOMER FORM
 # =========================
@@ -148,7 +156,18 @@ if st.session_state.new_customer:
 
     first = st.text_input("First Name")
     last = st.text_input("Last Name")
-    tier = st.selectbox("Tier", ["Gold", "Silver", "Bronze"])
+
+    tier = st.selectbox(
+        "Select Tier",
+        [
+            "Bronze — $30/mo | 10% off | 0.00 DPP",
+            "Gold — $100/mo | 15% off | 0.10 DPP",
+            "Executive — $150/mo | 20% off | 0.15 DPP"
+        ]
+    )
+
+    # Extract actual tier name
+    tier = tier.split(" — ")[0]
 
     mode = st.radio(
         "Select Action",
@@ -158,20 +177,17 @@ if st.session_state.new_customer:
     if st.button("Create Customer"):
 
         barcode = st.session_state.barcode
-        multiplier = tier_multiplier[tier]
+        config = TIER_CONFIG[tier]
 
         if mode == "Signup Only (No Purchase)":
             amount_value = 0
             points = 0
         else:
             amount_value = amount
-            points = int((amount / 10) * multiplier)
+            points = amount * config["dpp"]
 
         create_customer(barcode, first, last, tier, amount_value, points)
 
-        if mode == "Signup Only (No Purchase)":
-            st.success("Customer created successfully (no purchase).")
-        else:
-            st.success(f"Customer created! Points: {points}")
+        st.success(f"{tier} member created successfully!")
 
         st.session_state.new_customer = False

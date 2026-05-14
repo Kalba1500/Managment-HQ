@@ -8,12 +8,12 @@ from supabase import create_client
 # SUPABASE SETUP
 # =========================
 SUPABASE_URL = "https://rwuepcusnevuaxhdmrgt.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dWVwY3VzbmV2dWF4aGRtcmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MDM3NjIsImV4cCI6MjA5MzA3OTc2Mn0.Ci7hxwCYJxT8ec7LqseVRHxaYdB4DfBi35OaojTeWSk"
+SUPABASE_KEY = "YOUR_KEY_HERE"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # =========================
-# TIER CONFIG (NEW SYSTEM)
+# TIER CONFIG
 # =========================
 TIER_CONFIG = {
     "Bronze": {"dpp": 0.00, "discount": 10, "price": 30},
@@ -32,7 +32,17 @@ def get_customer(barcode):
     return res.data[0] if res.data else None
 
 
-def create_customer(barcode, first, last, tier, amount, points):
+def upload_photo(barcode, file):
+    file_path = f"{barcode}.png"
+
+    supabase.storage.from_("customer-photos").upload(file_path, file)
+
+    public_url = supabase.storage.from_("customer-photos").get_public_url(file_path)
+
+    return public_url
+
+
+def create_customer(barcode, first, last, tier, amount, points, photo_url=None):
     expiry = datetime.now() + timedelta(days=30)
 
     supabase.table("customers").insert({
@@ -44,7 +54,8 @@ def create_customer(barcode, first, last, tier, amount, points):
         "StoreCredit": points,
         "AmountBought": amount,
         "LastVisit": datetime.now().isoformat(),
-        "MembershipExpires": expiry.isoformat()
+        "MembershipExpires": expiry.isoformat(),
+        "PhotoURL": photo_url
     }).execute()
 
 
@@ -63,9 +74,9 @@ def load_all_customers():
     return pd.DataFrame(res.data)
 
 # =========================
-# UI SETUP
+# UI
 # =========================
-st.title("Customer POS System (Supabase)")
+st.title("Customer POS System")
 
 if "new_customer" not in st.session_state:
     st.session_state.new_customer = False
@@ -75,8 +86,6 @@ if "barcode" not in st.session_state:
 # =========================
 # VIEW CUSTOMERS
 # =========================
-st.subheader("All Customers")
-
 if st.button("Show Customers"):
     st.dataframe(load_all_customers())
 
@@ -95,9 +104,10 @@ if st.button("Submit"):
 
     if customer:
 
-        # =========================
-        # MEMBERSHIP STATUS
-        # =========================
+        # SHOW PHOTO
+        if customer.get("PhotoURL"):
+            st.image(customer["PhotoURL"], width=150)
+
         expiry = customer.get("MembershipExpires")
 
         if expiry:
@@ -119,9 +129,6 @@ if st.button("Submit"):
 
                 st.stop()
 
-        # =========================
-        # NORMAL PURCHASE
-        # =========================
         tier = customer["Tier"]
         config = TIER_CONFIG[tier]
 
@@ -130,15 +137,13 @@ if st.button("Submit"):
 
         update_customer(barcode, amount, points)
 
-        # =========================
-        # DISPLAY INFO
-        # =========================
         st.success(f"Welcome back {customer['FirstName']} {customer['LastName']} ({tier})")
 
-        if days_left >= 0:
-            st.info(f"Membership expires in {days_left} days")
-        else:
-            st.error("Membership EXPIRED")
+        if expiry:
+            if days_left >= 0:
+                st.info(f"Membership expires in {days_left} days")
+            else:
+                st.error("Membership EXPIRED")
 
         st.info(f"Points earned: {points:.2f}")
         st.info(f"Discount applied: {discount}%")
@@ -148,7 +153,7 @@ if st.button("Submit"):
         st.session_state.barcode = barcode
 
 # =========================
-# NEW CUSTOMER FORM
+# NEW CUSTOMER
 # =========================
 if st.session_state.new_customer:
 
@@ -166,7 +171,6 @@ if st.session_state.new_customer:
         ]
     )
 
-    # Extract actual tier name
     tier = tier.split(" — ")[0]
 
     mode = st.radio(
@@ -174,10 +178,17 @@ if st.session_state.new_customer:
         ["Signup Only (No Purchase)", "Signup + Purchase"]
     )
 
+    # PHOTO OPTION
+    photo = st.file_uploader("Upload Photo (optional)", type=["jpg", "png"])
+
     if st.button("Create Customer"):
 
         barcode = st.session_state.barcode
         config = TIER_CONFIG[tier]
+
+        photo_url = None
+        if photo:
+            photo_url = upload_photo(barcode, photo)
 
         if mode == "Signup Only (No Purchase)":
             amount_value = 0
@@ -186,8 +197,11 @@ if st.session_state.new_customer:
             amount_value = amount
             points = amount * config["dpp"]
 
-        create_customer(barcode, first, last, tier, amount_value, points)
+        create_customer(barcode, first, last, tier, amount_value, points, photo_url)
 
+        st.success(f"{tier} customer created!")
+
+        st.session_state.new_customer = False
         st.success(f"{tier} member created successfully!")
 
         st.session_state.new_customer = False

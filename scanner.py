@@ -37,7 +37,7 @@ def upload_photo(barcode, file):
         supabase.storage.from_(BUCKET).upload(
             file_path,
             file_bytes,
-            file_options={"content-type": "image/png", "upsert": true}
+            file_options={"content-type": "image/png", "upsert": "true"}
         )
     except Exception as e:
         st.error(f"Photo upload failed: {e}")

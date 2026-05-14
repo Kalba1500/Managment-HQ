@@ -189,7 +189,7 @@ if st.session_state.new_customer:
         ["Signup Only (No Purchase)", "Signup + Purchase"]
     )
 
-    # ✅ CAMERA INPUT (THIS IS WHAT YOU ASKED FOR)
+    # CAMERA INPUT (THIS IS WHAT YOU ASKED FOR)
     photo = st.camera_input("Take Customer Photo (optional)")
 
     if st.button("Create Customer"):

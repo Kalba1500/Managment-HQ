@@ -102,7 +102,7 @@ if "barcode" not in st.session_state:
 # VIEW CUSTOMERS
 # =========================
 if st.button("Show Customers"):
-    st.dataframe(load_all_customers())
+    st.table(load_all_customers())
  
 # =========================
 # INPUTS

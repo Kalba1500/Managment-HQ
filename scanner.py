@@ -22,6 +22,27 @@ TIER_CONFIG = {
 }
 
 # =========================
+# PHOTO UPLOAD (CAMERA)
+# =========================
+def upload_photo(barcode, file):
+    file_path = f"{barcode}.png"
+
+    file_bytes = file.getvalue()
+
+    supabase.storage.from_("customer-photos").upload(
+        file_path,
+        file_bytes,
+        {
+            "content-type": "image/png",
+            "upsert": "true"
+        }
+    )
+
+    public_url = supabase.storage.from_("customer-photos").get_public_url(file_path)
+
+    return public_url
+
+# =========================
 # DATABASE FUNCTIONS
 # =========================
 def get_customer(barcode):
@@ -30,16 +51,6 @@ def get_customer(barcode):
         .eq("BarcodeID", barcode) \
         .execute()
     return res.data[0] if res.data else None
-
-
-def upload_photo(barcode, file):
-    file_path = f"{barcode}.png"
-
-    supabase.storage.from_("customer-photos").upload(file_path, file)
-
-    public_url = supabase.storage.from_("customer-photos").get_public_url(file_path)
-
-    return public_url
 
 
 def create_customer(barcode, first, last, tier, amount, points, photo_url=None):
@@ -104,10 +115,6 @@ if st.button("Submit"):
 
     if customer:
 
-        # SHOW PHOTO
-        if customer.get("PhotoURL"):
-            st.image(customer["PhotoURL"], width=150)
-
         expiry = customer.get("MembershipExpires")
 
         if expiry:
@@ -137,6 +144,10 @@ if st.button("Submit"):
 
         update_customer(barcode, amount, points)
 
+        # SHOW PHOTO IF EXISTS
+        if customer.get("PhotoURL"):
+            st.image(customer["PhotoURL"], width=150)
+
         st.success(f"Welcome back {customer['FirstName']} {customer['LastName']} ({tier})")
 
         if expiry:
@@ -153,11 +164,11 @@ if st.button("Submit"):
         st.session_state.barcode = barcode
 
 # =========================
-# NEW CUSTOMER
+# NEW CUSTOMER SECTION
 # =========================
 if st.session_state.new_customer:
 
-    st.warning("New Customer")
+    st.warning("New Customer Setup")
 
     first = st.text_input("First Name")
     last = st.text_input("Last Name")
@@ -178,8 +189,8 @@ if st.session_state.new_customer:
         ["Signup Only (No Purchase)", "Signup + Purchase"]
     )
 
-    # PHOTO OPTION
-    photo = st.file_uploader("Upload Photo (optional)", type=["jpg", "png"])
+    # ✅ CAMERA INPUT (THIS IS WHAT YOU ASKED FOR)
+    photo = st.camera_input("Take Customer Photo (optional)")
 
     if st.button("Create Customer"):
 
@@ -199,9 +210,6 @@ if st.session_state.new_customer:
 
         create_customer(barcode, first, last, tier, amount_value, points, photo_url)
 
-        st.success(f"{tier} customer created!")
-
-        st.session_state.new_customer = False
-        st.success(f"{tier} member created successfully!")
+        st.success(f"{tier} customer created successfully!")
 
         st.session_state.new_customer = False

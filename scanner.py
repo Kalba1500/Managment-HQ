@@ -29,7 +29,7 @@ def upload_photo(barcode, file):
 
     file_bytes = file.getvalue()
 
-    supabase.storage.from_("customer pic").upload(
+    supabase.storage.from_("Customer pic").upload(
         file_path,
         file_bytes,
         {

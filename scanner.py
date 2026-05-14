@@ -7,8 +7,8 @@ from supabase import create_client
 # =========================
 # SUPABASE SETUP
 # =========================
-SUPABASE_URL = st.secrets["https://rwuepcusnevuaxhdmrgt.supabase.co"]
-SUPABASE_KEY = st.secrets["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ3dWVwY3VzbmV2dWF4aGRtcmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MDM3NjIsImV4cCI6MjA5MzA3OTc2Mn0.Ci7hxwCYJxT8ec7LqseVRHxaYdB4DfBi35OaojTeWSk"]
+SUPABASE_URL = st.secrets["SUPABASE_URL"]
+SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
  
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
  

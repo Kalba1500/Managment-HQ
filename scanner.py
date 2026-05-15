@@ -22,8 +22,8 @@ BUCKET = "Customer pic"
 # =========================
 TIER_CONFIG = {
     "Bronze":    {"dpp": 0.00, "discount": 10, "price": 30},
-    "Gold":      {"dpp": 0.10, "discount": 15, "price": 100},
-    "Executive": {"dpp": 0.15, "discount": 20, "price": 150},
+    "Gold":      {"dpp": 0.03, "discount": 15, "price": 100},
+    "Executive": {"dpp": 0.05, "discount": 20, "price": 150},
 }
  
 # =========================
@@ -177,9 +177,9 @@ if st.session_state.new_customer:
     tier = st.selectbox(
         "Select Tier",
         [
-            "Bronze — $30/mo | 10% off | 0.00 DPP",
-            "Gold — $100/mo | 15% off | 0.10 DPP",
-            "Executive — $150/mo | 20% off | 0.15 DPP"
+            "Bronze — $30/mo | 10% off | 0% DPP",
+            "Gold — $100/mo | 15% off | 3% DPP",
+            "Executive — $150/mo | 20% off | 5% DPP"
         ]
     )
     tier = tier.split(" — ")[0]

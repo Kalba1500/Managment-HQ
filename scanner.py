@@ -146,19 +146,25 @@ if st.button("Submit"):
  
         update_customer(barcode, amount, points)
  
-        if customer.get("PhotoURL"):
-            st.image(customer["PhotoURL"], width=150)
- 
-        st.success(f"Welcome back {customer['FirstName']} {customer['LastName']} ({tier})")
- 
-        if expiry:
-            if days_left >= 0:
-                st.info(f"Membership expires in {days_left} days")
-            else:
-                st.error("Membership EXPIRED")
- 
-        st.info(f"Points earned: {points:.2f}")
-        st.info(f"Discount applied: {discount}%")
+        col_img, col_info = st.columns([1, 2])
+
+        with col_img:
+            if customer.get("PhotoURL"):
+                st.image(customer["PhotoURL"], width=300)
+
+        with col_info:
+            st.markdown(f"## **Welcome back {customer['FirstName']} {customer['LastName']}!**")
+            st.markdown(f"### **{tier} Member**")
+
+            if expiry:
+                if days_left >= 0:
+                    st.markdown(f"### **🟢 Membership expires in {days_left} days**")
+                else:
+                    st.markdown(f"### **🔴 Membership EXPIRED**")
+
+            st.info(f"💰 Store Credit Earned: ${points:.2f}")
+            st.info(f"🏷️ Discount: {discount}%")
+            st.info(f"🛍️ Amount Spent: ${amount:.2f}")
  
     else:
         st.session_state.new_customer = True

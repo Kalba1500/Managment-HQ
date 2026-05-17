@@ -275,12 +275,8 @@ if st.session_state.new_customer:
         if photo:
             photo_url = upload_photo(barcode, photo)
  
-        if mode == "Signup Only (No Purchase)":
-            amount_value = 0
-            cashback       = 0
-        else:
-            amount_value = amount
-            cashback       = amount * config["cashback"]
+        amount_value = amount
+        cashback     = amount * config["cashback"]
  
         create_customer(barcode, first, last, tier, amount_value, cashback, photo_url)
  

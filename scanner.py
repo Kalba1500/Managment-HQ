@@ -1,6 +1,7 @@
 # ID SCANNER
 import streamlit as st
 import pandas as pd
+import bcrypt
 from datetime import datetime, timedelta
 from supabase import create_client
 
@@ -8,8 +9,8 @@ from supabase import create_client
 # LOGIN
 # =========================
 USERS = {
-    "CousinAbdul": "$2a$12$DAvmgR/lb7xx1uoF10ugdONCZRH4OtMauCq0jEAO719oW1JynvmsK",
-    "KingKhalil":  "$2a$12$9yQn6dQq5/keYPjLpYXq1uAurNdFAd1pUtLlU0TGBsVm1h1rZWdwu"
+    username: st.secrets["credentials"]["usernames"][username]["password"]
+    for username in st.secrets["credentials"]["usernames"]
 }
 
 if "logged_in" not in st.session_state:
@@ -20,7 +21,7 @@ if not st.session_state.logged_in:
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
     if st.button("Login"):
-        if username in USERS and USERS[username] == password:
+        if username in USERS and bcrypt.checkpw(password.encode(), USERS[username].encode()):
             st.session_state.logged_in = True
             st.session_state.username = username
             st.rerun()
@@ -31,7 +32,7 @@ if not st.session_state.logged_in:
 if st.sidebar.button("Logout"):
     st.session_state.logged_in = False
     st.rerun()
- 
+    
 # =========================
 # SUPABASE SETUP
 # =========================

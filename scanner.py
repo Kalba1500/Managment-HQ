@@ -234,7 +234,7 @@ if st.button("Submit"):
                 else:
                     st.markdown(f"### **🔴 Membership EXPIRED**")
 
-            st.info(f"💰 Cash Back Earned: ${points:.2f}")
+            st.info(f"💰 Cash Back Earned: ${cashback:.2f}")
             st.info(f"🏷️ Discount: {discount}%")
             st.info(f"🛍️ Amount Spent: ${amount:.2f}")
  

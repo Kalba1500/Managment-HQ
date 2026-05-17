@@ -56,12 +56,15 @@ div[data-testid="metric-container"] {
 .stButton > button:hover {
     background-color: #333333 !important;
 }
-div[data-testid="stSidebar"] .stButton > button {
+div[data-testid="stSidebar"] button {
     background-color: #ff4444 !important;
     color: #ffffff !important;
     font-weight: 700 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    width: 100% !important;
 }
-div[data-testid="stSidebar"] .stButton > button:hover {
+div[data-testid="stSidebar"] button:hover {
     background-color: #cc0000 !important;
 }
 .stTextInput input, .stNumberInput input {

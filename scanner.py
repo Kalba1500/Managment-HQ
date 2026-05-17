@@ -283,7 +283,7 @@ if st.session_state.new_customer:
             points       = 0
         else:
             amount_value = amount
-            points       = amount * config["dpp"]
+            points       = amount * config["cashback"]
  
         create_customer(barcode, first, last, tier, amount_value, points, photo_url)
  

@@ -204,7 +204,6 @@ if st.button("Submit"):
             if days_left < 0:
                 st.session_state.expired_customer = True
                 st.session_state.expired_barcode = barcode
-                st.stop()
  
         tier   = customer["Tier"]
         config = TIER_CONFIG[tier]

@@ -262,10 +262,7 @@ if st.session_state.new_customer:
     )
     tier = tier.split(" — ")[0]
  
-    mode = st.radio(
-        "Select Action",
-        ["Signup Only (No Purchase)", "Signup + Purchase"]
-    )
+    mode = "Signup + Purchase"
  
     photo = st.camera_input("Take Customer Photo (optional)")
  

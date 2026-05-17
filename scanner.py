@@ -132,7 +132,7 @@ def get_customer(barcode):
     return res.data[0] if res.data else None
  
  
-def create_customer(barcode, first, last, tier, amount, points, photo_url=None):
+def create_customer(barcode, first, last, tier, amount, cashback, photo_url=None):
     expiry = datetime.now() + timedelta(days=30)
  
     supabase.table("customers").insert({
@@ -141,7 +141,7 @@ def create_customer(barcode, first, last, tier, amount, points, photo_url=None):
         "LastName":          last,
         "Tier":              tier,
         "DateCreated":       datetime.now().isoformat(),
-        "StoreCredit":       points,
+        "StoreCredit":       cashback,
         "AmountBought":      amount,
         "LastVisit":         datetime.now().isoformat(),
         "MembershipExpires": expiry.isoformat(),
@@ -149,11 +149,11 @@ def create_customer(barcode, first, last, tier, amount, points, photo_url=None):
     }).execute()
  
  
-def update_customer(barcode, amount, points):
+def update_customer(barcode, amount, cashback):
     customer = get_customer(barcode)
  
     supabase.table("customers").update({
-        "StoreCredit":  float(customer["StoreCredit"]) + points,
+        "StoreCredit":  float(customer["StoreCredit"]) + cashback,
         "AmountBought": float(customer["AmountBought"]) + amount,
         "LastVisit":    datetime.now().isoformat()
     }).eq("BarcodeID", barcode).execute()
@@ -280,10 +280,10 @@ if st.session_state.new_customer:
  
         if mode == "Signup Only (No Purchase)":
             amount_value = 0
-            points       = 0
+            cashback       = 0
         else:
             amount_value = amount
-            points       = amount * config["cashback"]
+            cashback       = amount * config["cashback"]
  
         create_customer(barcode, first, last, tier, amount_value, cashback, photo_url)
  

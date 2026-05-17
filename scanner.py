@@ -211,10 +211,10 @@ if st.button("Submit"):
         tier   = customer["Tier"]
         config = TIER_CONFIG[tier]
  
-        points   = amount * config["dpp"]
+        cashback = amount * config["cashback"]
         discount = config["discount"]
  
-        update_customer(barcode, amount, points)
+        update_customer(barcode, amount, cashback)
  
         col_img, col_info = st.columns([1, 2])
 
@@ -234,7 +234,7 @@ if st.button("Submit"):
                 else:
                     st.markdown(f"### **🔴 Membership EXPIRED**")
 
-            st.info(f"💰 Store Credit Earned: ${points:.2f}")
+            st.info(f"💰 Cash Back Earned: ${points:.2f}")
             st.info(f"🏷️ Discount: {discount}%")
             st.info(f"🛍️ Amount Spent: ${amount:.2f}")
  
@@ -255,9 +255,9 @@ if st.session_state.new_customer:
     tier = st.selectbox(
         "Select Tier",
         [
-            "Bronze — $30/mo | 10% off | 0% DPP",
-            "Gold — $100/mo | 15% off | 3% DPP",
-            "Executive — $150/mo | 20% off | 5% DPP"
+            f"Bronze — ${TIER_CONFIG['Bronze']['price']}/mo | {TIER_CONFIG['Bronze']['discount']}% off | {TIER_CONFIG['Bronze']['cashback']*100:.1f}% Cash Back",
+            f"Gold — ${TIER_CONFIG['Gold']['price']}/mo | {TIER_CONFIG['Gold']['discount']}% off | {TIER_CONFIG['Gold']['cashback']*100:.1f}% Cash Back",
+            f"Executive — ${TIER_CONFIG['Executive']['price']}/mo | {TIER_CONFIG['Executive']['discount']}% off | {TIER_CONFIG['Executive']['cashback']*100:.1f}% Cash Back",
         ]
     )
     tier = tier.split(" — ")[0]
@@ -300,9 +300,9 @@ if st.session_state.expired_customer:
     new_tier = st.selectbox(
         "Select New Tier",
         [
-            "Bronze — $30/mo | 10% off | 0% DPP",
-            "Gold — $100/mo | 15% off | 3% DPP",
-            "Executive — $150/mo | 20% off | 5% DPP"
+            f"Bronze — ${TIER_CONFIG['Bronze']['price']}/mo | {TIER_CONFIG['Bronze']['discount']}% off | {TIER_CONFIG['Bronze']['cashback']*100:.1f}% Cash Back",
+            f"Gold — ${TIER_CONFIG['Gold']['price']}/mo | {TIER_CONFIG['Gold']['discount']}% off | {TIER_CONFIG['Gold']['cashback']*100:.1f}% Cash Back",
+            f"Executive — ${TIER_CONFIG['Executive']['price']}/mo | {TIER_CONFIG['Executive']['discount']}% off | {TIER_CONFIG['Executive']['cashback']*100:.1f}% Cash Back",
         ],
         key="rejoin_tier_select"
     )

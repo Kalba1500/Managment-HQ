@@ -29,6 +29,49 @@ if not st.session_state.logged_in:
             st.error("❌ Incorrect username or password")
     st.stop()
 
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&display=swap');
+
+html, body, [class*="css"], .stApp {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    font-family: 'Syne', sans-serif !important;
+}
+section[data-testid="stSidebar"] {
+    background-color: #f0f0f0 !important;
+}
+div[data-testid="metric-container"] {
+    background-color: #ffffff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+}
+.stButton > button {
+    background-color: #1a1a1a !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    border: none !important;
+    border-radius: 4px !important;
+}
+.stButton > button:hover {
+    background-color: #333333 !important;
+}
+div[data-testid="stSidebar"] .stButton > button {
+    background-color: #ff4444 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+div[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #cc0000 !important;
+}
+.stTextInput input, .stNumberInput input {
+    background-color: #ffffff !important;
+    color: #1a1a1a !important;
+    border: 1px solid #ccc !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 if st.sidebar.button("Logout"):
     st.session_state.logged_in = False
     st.rerun()
@@ -120,7 +163,7 @@ def load_all_customers():
 # =========================
 # UI
 # =========================
-st.title("Customer POS System")
+st.title("Cigar Membership System")
  
 if "new_customer" not in st.session_state:
     st.session_state.new_customer = False

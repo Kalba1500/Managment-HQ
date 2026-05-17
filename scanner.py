@@ -202,28 +202,8 @@ if st.button("Submit"):
             days_left   = (expiry_date - datetime.now()).days
 
             if days_left < 0:
-                st.error("⚠️ Membership EXPIRED")
-                st.markdown("### Would this customer like to rejoin?")
-
-                new_tier = st.selectbox(
-                    "Select New Tier",
-                    [
-                        "Bronze — $30/mo | 10% off | 0% DPP",
-                        "Gold — $100/mo | 15% off | 3% DPP",
-                        "Executive — $150/mo | 20% off | 5% DPP"
-                    ]
-                )
-                new_tier_name = new_tier.split(" — ")[0]
-
-                if st.button("✅ Confirm Rejoin"):
-                    new_expiry = datetime.now() + timedelta(days=30)
-                    supabase.table("customers").update({
-                        "MembershipExpires": new_expiry.isoformat(),
-                        "Tier": new_tier_name
-                    }).eq("BarcodeID", barcode).execute()
-                    st.success(f"✅ Rejoined as {new_tier_name} member for 30 days!")
-                    st.stop()
-
+                st.session_state.expired_customer = True
+                st.session_state.expired_barcode = barcode
                 st.stop()
  
         tier   = customer["Tier"]

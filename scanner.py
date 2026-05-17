@@ -169,6 +169,10 @@ if "new_customer" not in st.session_state:
     st.session_state.new_customer = False
 if "barcode" not in st.session_state:
     st.session_state.barcode = ""
+if "expired_customer" not in st.session_state:
+    st.session_state.expired_customer = False
+if "expired_barcode" not in st.session_state:
+    st.session_state.expired_barcode = ""
  
 # =========================
 # VIEW CUSTOMERS

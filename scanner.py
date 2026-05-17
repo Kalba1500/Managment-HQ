@@ -285,7 +285,7 @@ if st.session_state.new_customer:
             amount_value = amount
             points       = amount * config["cashback"]
  
-        create_customer(barcode, first, last, tier, amount_value, points, photo_url)
+        create_customer(barcode, first, last, tier, amount_value, cashback, photo_url)
  
         st.success(f"{tier} customer created successfully!")
         st.session_state.new_customer = False

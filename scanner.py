@@ -287,3 +287,32 @@ if st.session_state.new_customer:
  
         st.success(f"{tier} customer created successfully!")
         st.session_state.new_customer = False
+        
+# =========================
+# REJOIN SECTION
+# =========================
+if st.session_state.expired_customer:
+    st.error("⚠️ Membership EXPIRED")
+    st.markdown("### Would this customer like to rejoin?")
+
+    new_tier = st.selectbox(
+        "Select New Tier",
+        [
+            "Bronze — $30/mo | 10% off | 0% DPP",
+            "Gold — $100/mo | 15% off | 3% DPP",
+            "Executive — $150/mo | 20% off | 5% DPP"
+        ],
+        key="rejoin_tier_select"
+    )
+    new_tier_name = new_tier.split(" — ")[0]
+
+    if st.button("✅ Confirm Rejoin", key="confirm_rejoin_btn"):
+        new_expiry = datetime.now() + timedelta(days=30)
+        supabase.table("customers").update({
+            "MembershipExpires": new_expiry.isoformat(),
+            "Tier": new_tier_name
+        }).eq("BarcodeID", st.session_state.expired_barcode).execute()
+        st.success(f"✅ Rejoined as {new_tier_name} member for 30 days!")
+        st.session_state.expired_customer = False
+        st.session_state.expired_barcode = ""
+        st.rerun()

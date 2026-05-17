@@ -8,8 +8,8 @@ from supabase import create_client
 # LOGIN
 # =========================
 USERS = {
-    "Abusimbah": "ChromeinmyROOM2004!",
-    "KingKhalil": "BigMoney1"
+    "CousinAbdul": "$2a$12$DAvmgR/lb7xx1uoF10ugdONCZRH4OtMauCq0jEAO719oW1JynvmsK",
+    "KingKhalil":  "$2a$12$9yQn6dQq5/keYPjLpYXq1uAurNdFAd1pUtLlU0TGBsVm1h1rZWdwu"
 }
 
 if "logged_in" not in st.session_state:

@@ -3,6 +3,34 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from supabase import create_client
+
+# =========================
+# LOGIN
+# =========================
+USERS = {
+    "Abusimbah": "ChromeinmyROOM2004!",
+    "KingKhalil": "BigMoney1"
+}
+
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+if not st.session_state.logged_in:
+    st.title("🔐 Login")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+    if st.button("Login"):
+        if username in USERS and USERS[username] == password:
+            st.session_state.logged_in = True
+            st.session_state.username = username
+            st.rerun()
+        else:
+            st.error("❌ Incorrect username or password")
+    st.stop()
+
+if st.sidebar.button("Logout"):
+    st.session_state.logged_in = False
+    st.rerun()
  
 # =========================
 # SUPABASE SETUP

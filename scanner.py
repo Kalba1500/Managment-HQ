@@ -187,7 +187,7 @@ if st.button("Show Customers"):
 # INPUTS
 # =========================
 barcode = st.text_input("Scan / Enter Barcode")
-amount  = st.number_input("Amount Spent ($)", min_value=0.0)
+amount = st.number_input("Amount Spent ($)", min_value=0.0, value=None, placeholder="Enter amount...")
  
 # =========================
 # SUBMIT FLOW

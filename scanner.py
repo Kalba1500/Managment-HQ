@@ -279,9 +279,25 @@ if st.session_state.new_customer:
         cashback     = amount * config["cashback"]
  
         create_customer(barcode, first, last, tier, amount_value, cashback, photo_url)
- 
-        st.success(f"{tier} customer created successfully!")
         st.session_state.new_customer = False
+
+        st.success(f"✅ {tier} customer created successfully!")
+
+        col_img, col_info = st.columns([1, 2])
+
+        with col_img:
+            if photo_url:
+                st.image(photo_url, width=300)
+
+        with col_info:
+            st.markdown(f"## **Welcome {first} {last}!**")
+            st.markdown(f"### **{tier} Member**")
+            st.markdown("### **🟢 Membership active for 30 days**")
+            st.info(f"💰 Cash Back Earned: ${cashback:.2f}")
+            st.info(f"🏷️ Discount: {TIER_CONFIG[tier]['discount']}%")
+            st.info(f"🛍️ Amount Spent: ${amount_value:.2f}")
+
+        st.stop()
         
 # =========================
 # REJOIN SECTION

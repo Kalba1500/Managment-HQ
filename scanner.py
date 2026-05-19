@@ -97,8 +97,8 @@ BUCKET = "Customer pic"
 # =========================
 TIER_CONFIG = {
     "Bronze":    {"cashback": 0.00,  "discount": 10, "price": 30},
-    "Gold":      {"cashback": 0.075, "discount": 15, "price": 100},
-    "Executive": {"cashback": 0.10,  "discount": 20, "price": 150},
+    "Gold":      {"cashback": 0.05, "discount": 15, "price": 80},
+    "Executive": {"cashback": 0.05,  "discount": 20, "price": 100},
 }
  
 # =========================
